@@ -1,0 +1,122 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>文件上传之原生ajax上传</title>
+    <style type="text/css">
+        .container{
+            width: 200px;
+            height: 20px;
+            background-color: gray;
+            border-radius: 100px;
+        }
+        #progress{
+            height: 20px;
+            background-color: orange;
+            display: inline-block;
+            border-radius: 100px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!--使用python搭建web服务器： python -m SimpleHTTPServer（localhost:8080打开浏览器即可） -->
+    <form action="https://jsonplaceholder.typicode.com/posts/"
+          enctype="multipart/form-data"
+          method="post">
+        <div>点击文件上传</div>
+         <input type="file" name="myFile" id="file">
+        <!--进度条-->
+        <div class='container'>
+            <span id="progress"></span>
+        </div>
+    </form>
+    <button onclick="fileSelected()">文件信息</button>
+    <button onclick="uploadFile()">确认上传</button>
+    <div id="info">
+        <div id="fileName"></div>
+        <div id="fileSize"></div>
+        <div id="fileType"></div>
+    </div>
+    <div id="result"></div>
+<script>
+    /**
+     *
+     * 文件信息
+     *
+     */
+    function fileSelected() {
+        // 上传文件本质上可以是可以多个文件上传的，所以获取文件为数组。
+        // 因为单文件上传，我们获取文件数组的第一个值对象
+        var file = document.getElementById('file').files[0];
+
+        //lastModified: 1561001590000
+        // lastModifiedDate: Thu Jun 20 2019 11:33:10 GMT+0800 (中国标准时间)
+        // __proto__: Object
+        // name: "湖南省因公出国任务审批（确认）表及人员名单.jpg" ------ 文件名字
+        // size: 115185 ---------------------------------------- 文件大小（单位B）B KB MB GB
+        // type: "image/jpeg"  --------------------------------- 文件类型
+        // webkitRelativePath: ""
+        if (file) {
+            var fileSize = 0;
+            if (file.size > 1024 * 1024)
+                fileSize = (Math.round(file.size * 100 / (1024 * 1024)) / 100).toString() + 'MB';
+            else
+                fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
+            document.getElementById('fileName').innerHTML = 'Name: ' + file.name;
+            document.getElementById('fileSize').innerHTML = 'Size: ' + fileSize;
+            document.getElementById('fileType').innerHTML = 'Type: ' + file.type;
+        }
+    }
+    /**
+     *
+     * 上传文件
+     *
+     */
+    function uploadFile() {
+        // 创建一个FormData对象，new FormData()
+        var fd = new FormData();
+
+        // 调用append()方法
+        fd.append("file", document.getElementById('file').files[0]);
+        var xhr = new XMLHttpRequest();
+
+        // onabort: null-------------*在因为调用abort()方法而终止链接时触发
+        // onerror: null-------------*在请求发生错误时触发
+        // onload: null -------------*在接收到完整的相应数据时触发
+        // upload: XMLHttpRequestUpload
+        //         onprogress: null-------------*在接收相应期间持续不断触发
+        xhr.upload.addEventListener("progress", uploadProgress, false);
+        xhr.addEventListener("load", uploadComplete, false);
+        xhr.addEventListener("error", uploadFailed, false);
+        xhr.addEventListener("abort", uploadCanceled, false);
+
+        xhr.open("POST", "https://jsonplaceholder.typicode.com/posts/");//修改成自己的接口,open()方法之前添加onprogress事件处理程序
+        xhr.send(fd);
+    }
+
+    function uploadProgress(evt) {  //evt属性：lengthComputable、loaded和total
+        console.log(evt)
+        if (evt.lengthComputable) { //lengthComputable是一个表示进度信息是否可用的布尔值
+            var percent = Math.round(evt.loaded * 100 / evt.total);//loaded表示已经接收的字节数
+            document.getElementById('progress').innerHTML = percent.toFixed(2) + '%';
+            document.getElementById('progress').style.width = percent.toFixed(2) + '%';
+        }
+        else {
+            document.getElementById('progress').innerHTML = 'unable to compute';
+        }
+    }
+    function uploadComplete(evt) {
+        /* 服务器端返回响应时候触发event事件*/
+        document.getElementById('result').innerHTML = evt.target.responseText;
+    }
+    function uploadFailed(evt) {
+        alert("There was an error attempting to upload the file.");
+    }
+    function uploadCanceled(evt) {
+        alert("The upload has been canceled by the user or the browser dropped the connection.");
+    }
+</script>
+
+</body>
+</html>
