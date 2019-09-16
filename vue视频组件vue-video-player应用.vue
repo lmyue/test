@@ -2,6 +2,8 @@
   <div>
 
      <!--
+     参考：https://www.jb51.net/article/135779.htm
+     
       1、安装：npm install vue-video-player --save
       2、在main.js入口文件中引入:
 
